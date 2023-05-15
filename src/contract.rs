@@ -1,5 +1,6 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
+use cosmwasm_std::Event;
 use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult};
 use cw2::set_contract_version;
 
@@ -50,7 +51,11 @@ pub fn try_increment(deps: DepsMut) -> Result<Response, ContractError> {
         Ok(state)
     })?;
 
-    Ok(Response::new().add_attribute("method", "try_increment"))
+    let state = STATE.load(deps.storage)?;
+
+    let event = Event::new("count_incremented").add_attribute("newCount", state.count.to_string());
+
+    Ok(Response::new().add_event(event).add_attribute("method", "try_increment"))
 }
 
 pub fn try_reset(deps: DepsMut, info: MessageInfo, count: i32) -> Result<Response, ContractError> {
@@ -61,7 +66,8 @@ pub fn try_reset(deps: DepsMut, info: MessageInfo, count: i32) -> Result<Respons
         state.count = count;
         Ok(state)
     })?;
-    Ok(Response::new().add_attribute("method", "reset"))
+    let event = Event::new("count_reset").add_attribute("resetValue", count.to_string());
+    Ok(Response::new().add_event(event).add_attribute("method", "reset"))
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
